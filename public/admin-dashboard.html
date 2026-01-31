@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Fahad Electric Store & Electronics</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <h1>⚡ Fahad Electric Store & Electronics</h1>
+          <p class="urdu">فہد الیکٹرک اسٹور اینڈ الیکٹرانکس</p>
+        </div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        <nav>
+          <ul id="navMenu">
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li><a href="/" target="_blank">View Website</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <section style="padding: 2rem 0;">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 style="color: var(--dark-color);">Admin Dashboard</h2>
+          <p>Welcome, <strong id="adminName"></strong></p>
+        </div>
+        <button class="btn btn-primary" onclick="openNewJobModal()">
+          ➕ Add New Repair Job
+        </button>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="stats-grid" id="statsContainer">
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Total Jobs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Delivered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">Rs. 0</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="card">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;">
+          <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+            <label for="statusFilter">Filter by Status:</label>
+            <select id="statusFilter" onchange="loadRepairJobs()">
+              <option value="All">All</option>
+              <option value="Received">Received</option>
+              <option value="Diagnosing">Diagnosing</option>
+              <option value="In Repair">In Repair</option>
+              <option value="Waiting for Parts">Waiting for Parts</option>
+              <option value="Completed">Completed</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 2; min-width: 250px; margin-bottom: 0;">
+            <label for="searchInput">Search:</label>
+            <input type="text" id="searchInput" placeholder="Job ID, Customer Name, or Phone...">
+          </div>
+          <button class="btn btn-primary" onclick="loadRepairJobs()">🔍 Search</button>
+          <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+        </div>
+      </div>
+
+      <!-- Repair Jobs Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Repair Jobs</h3>
+        </div>
+        <div id="loadingContainer" class="text-center" style="padding: 2rem;">
+          <div class="loading"></div>
+          <p>Loading repair jobs...</p>
+        </div>
+        <div id="tableContainer" class="hidden">
+          <div class="table-container">
+            <table id="repairJobsTable">
+              <thead>
+                <tr>
+                  <th>Job ID</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Item</th>
+                  <th>Status</th>
+                  <th>Cost</th>
+                  <th>Payment</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+              </tbody>
+            </table>
+          </div>
+          <div id="noResults" class="hidden text-center" style="padding: 2rem;">
+            <p>No repair jobs found.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Add/Edit Job Modal -->
+  <div id="jobModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add New Repair Job</h3>
+        <button class="modal-close" onclick="closeJobModal()">&times;</button>
+      </div>
+      <form id="jobForm">
+        <input type="hidden" id="editJobId">
+        
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="customerName">Customer Name *</label>
+            <input type="text" id="customerName" required>
+          </div>
+          <div class="form-group">
+            <label for="customerPhone">Phone Number *</label>
+            <input type="tel" id="customerPhone" required>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="itemType">Item Type *</label>
+            <select id="itemType" required>
+              <option value="">Select item type...</option>
+              <option value="TV / LED">TV / LED</option>
+              <option value="UPS">UPS</option>
+              <option value="AC Kit">AC Kit</option>
+              <option value="Motor">Motor</option>
+              <option value="Electrical Appliance">Electrical Appliance</option>
+              <option value="Power Supply">Power Supply</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="brandModel">Brand / Model</label>
+            <input type="text" id="brandModel">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="problemDescription">Problem Description *</label>
+          <textarea id="problemDescription" required></textarea>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="receivedDate">Received Date *</label>
+            <input type="date" id="receivedDate" required>
+          </div>
+          <div class="form-group">
+            <label for="expectedCompletion">Expected Completion</label>
+            <input type="date" id="expectedCompletion">
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="repairCost">Repair Cost (Rs.)</label>
+            <input type="number" id="repairCost" min="0" step="0.01" value="0">
+          </div>
+          <div class="form-group">
+            <label for="repairStatus">Repair Status</label>
+            <select id="repairStatus">
+              <option value="Received">Received</option>
+              <option value="Diagnosing">Diagnosing</option>
+              <option value="In Repair">In Repair</option>
+              <option value="Waiting for Parts">Waiting for Parts</option>
+              <option value="Completed">Completed</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="paymentStatus">Payment Status</label>
+            <select id="paymentStatus">
+              <option value="Pending">Pending</option>
+              <option value="Paid">Paid</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="deliveryDate">Delivery Date</label>
+            <input type="date" id="deliveryDate">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="technicianNotes">Technician Notes</label>
+          <textarea id="technicianNotes" rows="3"></textarea>
+        </div>
+
+        <div id="jobModalAlert"></div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeJobModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="jobFormBtn">Save Job</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 Fahad Electric Store & Electronics. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    let authToken = '';
+    let allJobs = [];
+
+    function toggleMenu() {
+      const menu = document.getElementById('navMenu');
+      menu.classList.toggle('active');
+    }
+
+    // Check authentication
+    window.addEventListener('DOMContentLoaded', function() {
+      authToken = localStorage.getItem('adminToken');
+      const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+
+      if (!authToken) {
+        window.location.href = '/admin';
+        return;
+      }
+
+      document.getElementById('adminName').textContent = user.username || 'Admin';
+      
+      // Set today's date as default
+      document.getElementById('receivedDate').valueAsDate = new Date();
+      
+      loadDashboardStats();
+      loadRepairJobs();
+    });
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = '/admin';
+      }
+    }
+
+    async function loadDashboardStats() {
+      try {
+        const response = await fetch('/api/dashboard/stats', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            logout();
+          }
+          return;
+        }
+
+        const stats = await response.json();
+        
+        const statsHtml = `
+          <div class="stat-card">
+            <div class="stat-value">${stats.total || 0}</div>
+            <div class="stat-label">Total Jobs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${stats.pending || 0}</div>
+            <div class="stat-label">Pending</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${stats.completed || 0}</div>
+            <div class="stat-label">Completed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${stats.delivered || 0}</div>
+            <div class="stat-label">Delivered</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">Rs. ${stats.total_revenue || 0}</div>
+            <div class="stat-label">Total Revenue</div>
+          </div>
+        `;
+        
+        document.getElementById('statsContainer').innerHTML = statsHtml;
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    async function loadRepairJobs() {
+      const status = document.getElementById('statusFilter').value;
+      const search = document.getElementById('searchInput').value.trim();
+      
+      document.getElementById('loadingContainer').classList.remove('hidden');
+      document.getElementById('tableContainer').classList.add('hidden');
+
+      try {
+        const params = new URLSearchParams();
+        if (status) params.append('status', status);
+        if (search) params.append('search', search);
+
+        const response = await fetch(`/api/repairs?${params}`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            logout();
+          }
+          return;
+        }
+
+        allJobs = await response.json();
+        displayRepairJobs(allJobs);
+        
+      } catch (error) {
+        console.error('Error loading repair jobs:', error);
+      } finally {
+        document.getElementById('loadingContainer').classList.add('hidden');
+        document.getElementById('tableContainer').classList.remove('hidden');
+      }
+    }
+
+    function displayRepairJobs(jobs) {
+      const tbody = document.getElementById('tableBody');
+      const noResults = document.getElementById('noResults');
+
+      if (jobs.length === 0) {
+        tbody.innerHTML = '';
+        noResults.classList.remove('hidden');
+        return;
+      }
+
+      noResults.classList.add('hidden');
+
+      const html = jobs.map(job => {
+        const statusClass = job.repair_status.toLowerCase().replace(/\s+/g, '-');
+        const paymentClass = job.payment_status.toLowerCase();
+        
+        return `
+          <tr>
+            <td><strong>${job.job_id}</strong></td>
+            <td>${job.customer_name}</td>
+            <td>${job.customer_phone}</td>
+            <td>${job.item_type}</td>
+            <td><span class="badge badge-${statusClass}">${job.repair_status}</span></td>
+            <td><strong>Rs. ${job.repair_cost || 0}</strong></td>
+            <td><span class="badge badge-${paymentClass}">${job.payment_status}</span></td>
+            <td>
+              <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick='editJob(${JSON.stringify(job).replace(/'/g, "&#39;")})'>
+                Edit
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = html;
+    }
+
+    function clearFilters() {
+      document.getElementById('statusFilter').value = 'All';
+      document.getElementById('searchInput').value = '';
+      loadRepairJobs();
+    }
+
+    function openNewJobModal() {
+      document.getElementById('modalTitle').textContent = 'Add New Repair Job';
+      document.getElementById('jobForm').reset();
+      document.getElementById('editJobId').value = '';
+      document.getElementById('receivedDate').valueAsDate = new Date();
+      document.getElementById('repairStatus').value = 'Received';
+      document.getElementById('paymentStatus').value = 'Pending';
+      document.getElementById('jobModalAlert').innerHTML = '';
+      document.getElementById('jobModal').classList.add('active');
+    }
+
+    function editJob(job) {
+      document.getElementById('modalTitle').textContent = 'Edit Repair Job';
+      document.getElementById('editJobId').value = job.job_id;
+      document.getElementById('customerName').value = job.customer_name;
+      document.getElementById('customerPhone').value = job.customer_phone;
+      document.getElementById('itemType').value = job.item_type;
+      document.getElementById('brandModel').value = job.brand_model || '';
+      document.getElementById('problemDescription').value = job.problem_description;
+      document.getElementById('receivedDate').value = job.received_date;
+      document.getElementById('expectedCompletion').value = job.expected_completion || '';
+      document.getElementById('repairCost').value = job.repair_cost || 0;
+      document.getElementById('repairStatus').value = job.repair_status;
+      document.getElementById('paymentStatus').value = job.payment_status;
+      document.getElementById('deliveryDate').value = job.delivery_date || '';
+      document.getElementById('technicianNotes').value = job.technician_notes || '';
+      document.getElementById('jobModalAlert').innerHTML = '';
+      document.getElementById('jobModal').classList.add('active');
+    }
+
+    function closeJobModal() {
+      document.getElementById('jobModal').classList.remove('active');
+    }
+
+    document.getElementById('jobForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const jobId = document.getElementById('editJobId').value;
+      const isEdit = jobId !== '';
+      
+      const formData = {
+        customer_name: document.getElementById('customerName').value.trim(),
+        customer_phone: document.getElementById('customerPhone').value.trim(),
+        item_type: document.getElementById('itemType').value,
+        brand_model: document.getElementById('brandModel').value.trim(),
+        problem_description: document.getElementById('problemDescription').value.trim(),
+        received_date: document.getElementById('receivedDate').value,
+        expected_completion: document.getElementById('expectedCompletion').value || null,
+        repair_cost: parseFloat(document.getElementById('repairCost').value) || 0,
+        repair_status: document.getElementById('repairStatus').value,
+        payment_status: document.getElementById('paymentStatus').value,
+        delivery_date: document.getElementById('deliveryDate').value || null,
+        technician_notes: document.getElementById('technicianNotes').value.trim()
+      };
+
+      const btn = document.getElementById('jobFormBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const url = isEdit ? `/api/repairs/${jobId}` : '/api/repairs';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showModalAlert(data.error || 'Failed to save repair job', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Save Job';
+          return;
+        }
+
+        showModalAlert(isEdit ? 'Repair job updated successfully!' : `Repair job created! Job ID: ${data.jobId}`, 'success');
+        
+        setTimeout(() => {
+          closeJobModal();
+          loadDashboardStats();
+          loadRepairJobs();
+        }, 1500);
+
+      } catch (error) {
+        showModalAlert('Error connecting to server', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Save Job';
+      }
+    });
+
+    function showModalAlert(message, type) {
+      const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+      document.getElementById('jobModalAlert').innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('jobModal');
+      if (e.target === modal) {
+        closeJobModal();
+      }
+    });
+  </script>
+</body>
+</html>
