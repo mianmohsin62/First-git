@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Fahad Electric Store & Electronics</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <h1>⚡ Fahad Electric Store & Electronics</h1>
+          <p class="urdu">فہد الیکٹرک اسٹور اینڈ الیکٹرانکس</p>
+        </div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        <nav>
+          <ul id="navMenu">
+            <li><a href="/">Home / ہوم</a></li>
+            <li><a href="/about">About / تعارف</a></li>
+            <li><a href="/services">Services / خدمات</a></li>
+            <li><a href="/check-status">Check Status / حالت دیکھیں</a></li>
+            <li><a href="/contact">Contact / رابطہ</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <section style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 2rem 0;">
+    <div class="container">
+      <div style="max-width: 400px; margin: 0 auto;">
+        <div class="card">
+          <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
+            <h2 style="color: var(--primary-color); margin-bottom: 0.5rem;">Admin Login</h2>
+            <p class="urdu">ایڈمن لاگ ان</p>
+          </div>
+
+          <div id="alertContainer"></div>
+
+          <form id="loginForm">
+            <div class="form-group">
+              <label for="username">
+                Username / صارف نام
+                <span style="color: var(--danger-color);">*</span>
+              </label>
+              <input type="text" id="username" required autofocus>
+            </div>
+
+            <div class="form-group">
+              <label for="password">
+                Password / پاس ورڈ
+                <span style="color: var(--danger-color);">*</span>
+              </label>
+              <input type="password" id="password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+              Login / لاگ ان
+            </button>
+          </form>
+
+          <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border-radius: 0.375rem; font-size: 0.875rem;">
+            <strong>⚠️ Admin Access Only</strong>
+            <p style="margin-top: 0.5rem;">This area is restricted to authorized workshop staff only.</p>
+            <p class="urdu" style="margin-top: 0.5rem;">یہ علاقہ صرف مجاز ورکشاپ عملے کے لیے ہے۔</p>
+          </div>
+
+          <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="/" style="color: var(--primary-color); text-decoration: none;">
+              ← Back to Home / واپس ہوم پر
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 Fahad Electric Store & Electronics. All rights reserved.</p>
+      <p class="urdu">فہد الیکٹرک اسٹور اینڈ الیکٹرانکس</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('navMenu');
+      menu.classList.toggle('active');
+    }
+
+    const form = document.getElementById('loginForm');
+    const alertContainer = document.getElementById('alertContainer');
+    const loginBtn = document.getElementById('loginBtn');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      alertContainer.innerHTML = '';
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Logging in...';
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showAlert(data.error || 'Login failed', 'error');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Login / لاگ ان';
+          return;
+        }
+
+        // Store token
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUser', JSON.stringify(data.user));
+
+        showAlert('Login successful! Redirecting...', 'success');
+        
+        setTimeout(() => {
+          window.location.href = '/admin/dashboard';
+        }, 1000);
+
+      } catch (error) {
+        showAlert('Error connecting to server. Please try again.', 'error');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login / لاگ ان';
+      }
+    });
+
+    function showAlert(message, type) {
+      const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+      alertContainer.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+    }
+
+    // Check if already logged in
+    window.addEventListener('DOMContentLoaded', function() {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        window.location.href = '/admin/dashboard';
+      }
+    });
+  </script>
+</body>
+</html>
